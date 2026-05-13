@@ -1,14 +1,18 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "@/lib/auth-context";
 import { SalesInvoiceTable } from "@/components/sales-invoice-table";
+import { SalesRevenueDashboard } from "@/components/sales-revenue-dashboard";
 import { AppHeader } from "@/components/app-header";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { LayoutDashboard, Table2 } from "lucide-react";
 
 export default function Page() {
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuth();
+  const [mainTab, setMainTab] = useState("dashboard");
 
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
@@ -37,11 +41,28 @@ export default function Page() {
             Sales Invoices
           </h1>
           <p className="mt-2 text-muted-foreground">
-            View and manage your sales invoices from QNE Cloud
+            Revenue insights and invoice list from QNE Cloud
           </p>
         </div>
-        
-        <SalesInvoiceTable />
+
+        <Tabs value={mainTab} onValueChange={setMainTab} className="space-y-6">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="dashboard" className="gap-2">
+              <LayoutDashboard className="size-4" />
+              Dashboard
+            </TabsTrigger>
+            <TabsTrigger value="invoices" className="gap-2">
+              <Table2 className="size-4" />
+              Invoices
+            </TabsTrigger>
+          </TabsList>
+          <TabsContent value="dashboard" className="mt-0 outline-none">
+            {mainTab === "dashboard" ? <SalesRevenueDashboard /> : null}
+          </TabsContent>
+          <TabsContent value="invoices" className="mt-0 outline-none">
+            {mainTab === "invoices" ? <SalesInvoiceTable /> : null}
+          </TabsContent>
+        </Tabs>
       </main>
     </div>
   );

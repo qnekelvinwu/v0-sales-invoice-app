@@ -4,11 +4,13 @@ import useSWR from "swr";
 import type { SalesInvoice, ApiResponse } from "@/lib/types";
 
 interface UseSalesInvoicesParams {
-  token: string;
+  token: string | null;
   skip?: number;
   top?: number;
   filter?: string;
   orderby?: string;
+  /** When false, SWR will not fetch (e.g. lazy-load another tab). */
+  enabled?: boolean;
 }
 
 const fetcher = async (url: string): Promise<ApiResponse<SalesInvoice[]>> => {
@@ -25,9 +27,10 @@ export function useSalesInvoices({
   top = 20,
   filter = "",
   orderby = "docDate desc",
+  enabled = true,
 }: UseSalesInvoicesParams) {
   const params = new URLSearchParams({
-    token,
+    ...(token ? { token } : {}),
     $skip: skip.toString(),
     $top: top.toString(),
     $orderby: orderby,
@@ -37,8 +40,10 @@ export function useSalesInvoices({
     params.set("$filter", filter);
   }
 
+  const shouldFetch = Boolean(token) && enabled;
+
   const { data, error, isLoading, mutate } = useSWR<ApiResponse<SalesInvoice[]>>(
-    token ? `/api/sales-invoices?${params.toString()}` : null,
+    shouldFetch ? `/api/sales-invoices?${params.toString()}` : null,
     fetcher,
     {
       revalidateOnFocus: false,
@@ -46,8 +51,8 @@ export function useSalesInvoices({
     }
   );
 
-  // Ensure invoices is always an array
-  const invoices = Array.isArray(data?.data) ? data.data : [];
+  const rawInvoices = data?.data;
+  const invoices = Array.isArray(rawInvoices) ? rawInvoices : [];
   
   return {
     invoices,
