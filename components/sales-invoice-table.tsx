@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { useSalesInvoices } from "@/hooks/use-sales-invoices";
-import { useToken } from "@/lib/token-context";
+import { useAuth } from "@/lib/auth-context";
 import {
   Table,
   TableBody,
@@ -26,7 +26,7 @@ import {
 const PAGE_SIZE = 20;
 
 export function SalesInvoiceTable() {
-  const { token, isLoading: tokenLoading } = useToken();
+  const { token, isLoading: tokenLoading } = useAuth();
   const [page, setPage] = useState(0);
   const [searchTerm, setSearchTerm] = useState("");
   const [appliedFilter, setAppliedFilter] = useState("");
