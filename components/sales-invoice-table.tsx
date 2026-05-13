@@ -156,10 +156,9 @@ export function SalesInvoiceTable() {
                     <TableHead>Invoice No.</TableHead>
                     <TableHead>Date</TableHead>
                     <TableHead>Customer</TableHead>
-                    <TableHead>Sales Person</TableHead>
-                    <TableHead className="text-right">Amount</TableHead>
-                    <TableHead className="text-right">Tax</TableHead>
+                    <TableHead>Description</TableHead>
                     <TableHead className="text-right">Net Total</TableHead>
+                    <TableHead className="text-right">Outstanding</TableHead>
                     <TableHead>Status</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -172,33 +171,36 @@ export function SalesInvoiceTable() {
                       <TableCell>{formatDate(invoice.docDate)}</TableCell>
                       <TableCell>
                         <div>
-                          <p className="font-medium">{invoice.customerName || "-"}</p>
+                          <p className="font-medium">{invoice.customerName || invoice.invoiceTo || "-"}</p>
                           <p className="text-xs text-muted-foreground">
                             {invoice.customerCode || ""}
                           </p>
                         </div>
                       </TableCell>
-                      <TableCell>{invoice.salesPerson || "-"}</TableCell>
-                      <TableCell className="text-right">
-                        {formatCurrency(invoice.totalAmount, invoice.currencyCode)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {formatCurrency(invoice.totalTax, invoice.currencyCode)}
+                      <TableCell className="max-w-[200px] truncate">
+                        {invoice.description || "-"}
                       </TableCell>
                       <TableCell className="text-right font-medium">
-                        {formatCurrency(invoice.netTotal, invoice.currencyCode)}
+                        {formatCurrency(invoice.netTotalAmount, invoice.currencyCode)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        {formatCurrency(invoice.outstandingAmount, invoice.currencyCode)}
                       </TableCell>
                       <TableCell>
                         <Badge
                           variant={
-                            invoice.status === "Completed" || invoice.status === "Posted"
+                            invoice.isCancelled
+                              ? "destructive"
+                              : invoice.outstandingAmount === 0
                               ? "default"
-                              : invoice.status === "Draft"
-                              ? "secondary"
-                              : "outline"
+                              : "secondary"
                           }
                         >
-                          {invoice.status || "Unknown"}
+                          {invoice.isCancelled
+                            ? "Cancelled"
+                            : invoice.outstandingAmount === 0
+                            ? "Paid"
+                            : "Outstanding"}
                         </Badge>
                       </TableCell>
                     </TableRow>

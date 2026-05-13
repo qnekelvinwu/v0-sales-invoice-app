@@ -53,10 +53,33 @@ export async function GET(request: NextRequest) {
 
     const data = await response.json();
 
+    // Handle various response structures from the API
+    // API returns: { data: { count: number, value: [...] } }
+    let invoices = [];
+    let totalCount = 0;
+
+    if (Array.isArray(data)) {
+      invoices = data;
+      totalCount = data.length;
+    } else if (data.data && typeof data.data === "object" && Array.isArray(data.data.value)) {
+      // Handle nested structure: { data: { count, value } }
+      invoices = data.data.value;
+      totalCount = data.data.count || data.data.value.length;
+    } else if (data.data && Array.isArray(data.data)) {
+      invoices = data.data;
+      totalCount = data.totalCount || data.data.length;
+    } else if (data.value && Array.isArray(data.value)) {
+      invoices = data.value;
+      totalCount = data.count || data["@odata.count"] || data.value.length;
+    } else if (data.items && Array.isArray(data.items)) {
+      invoices = data.items;
+      totalCount = data.totalCount || data.items.length;
+    }
+
     return NextResponse.json({
       success: true,
-      data: data.data || data.value || data,
-      totalCount: data.totalCount || data["@odata.count"] || 0,
+      data: invoices,
+      totalCount: totalCount,
     });
   } catch (error) {
     console.error("Fetch error:", error);

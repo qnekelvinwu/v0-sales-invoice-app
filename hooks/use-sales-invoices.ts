@@ -46,8 +46,11 @@ export function useSalesInvoices({
     }
   );
 
+  // Ensure invoices is always an array
+  const invoices = Array.isArray(data?.data) ? data.data : [];
+  
   return {
-    invoices: data?.data || [],
+    invoices,
     totalCount: data?.totalCount || 0,
     isLoading,
     isError: error || (data && !data.success),
