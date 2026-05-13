@@ -23,7 +23,8 @@ interface AuthContextType {
   user: UserInfo | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (token: string) => boolean;
+  login: (username: string, password: string) => Promise<{ success: boolean; error?: string }>;
+  loginWithToken: (token: string) => boolean;
   logout: () => void;
 }
 
@@ -105,7 +106,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  const login = useCallback((newToken: string): boolean => {
+  const loginWithToken = useCallback((newToken: string): boolean => {
     const userInfo = parseJwtPayload(newToken);
     if (userInfo) {
       setToken(newToken);
@@ -115,6 +116,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     return false;
   }, []);
+
+  const login = useCallback(async (username: string, password: string): Promise<{ success: boolean; error?: string }> => {
+    try {
+      const response = await fetch("/api/auth/token", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ username, password }),
+      });
+
+      const data = await response.json();
+
+      if (!data.success || !data.token) {
+        return { success: false, error: data.error || "Authentication failed" };
+      }
+
+      const success = loginWithToken(data.token);
+      if (!success) {
+        return { success: false, error: "Invalid token received from server" };
+      }
+
+      return { success: true };
+    } catch (error) {
+      console.error("Login error:", error);
+      return { success: false, error: "Network error. Please try again." };
+    }
+  }, [loginWithToken]);
 
   const logout = useCallback(() => {
     setToken(null);
@@ -131,6 +160,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         isAuthenticated: !!token && !!user,
         isLoading,
         login,
+        loginWithToken,
         logout,
       }}
     >

@@ -13,12 +13,14 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { AlertCircle, LogIn, FileText } from "lucide-react";
+import { AlertCircle, LogIn, FileText, Eye, EyeOff } from "lucide-react";
 
 export default function LoginPage() {
   const router = useRouter();
   const { login, isAuthenticated, isLoading } = useAuth();
-  const [token, setToken] = useState("");
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -34,18 +36,21 @@ export default function LoginPage() {
     setError("");
     setIsSubmitting(true);
 
-    const trimmedToken = token.trim();
-    if (!trimmedToken) {
-      setError("Please enter a JWT token");
+    const trimmedUsername = username.trim();
+    const trimmedPassword = password.trim();
+
+    if (!trimmedUsername || !trimmedPassword) {
+      setError("Please enter both username and password");
       setIsSubmitting(false);
       return;
     }
 
-    const success = login(trimmedToken);
-    if (success) {
+    const result = await login(trimmedUsername, trimmedPassword);
+    
+    if (result.success) {
       router.push("/");
     } else {
-      setError("Invalid or expired JWT token. Please check and try again.");
+      setError(result.error || "Authentication failed. Please try again.");
       setIsSubmitting(false);
     }
   };
@@ -71,22 +76,51 @@ export default function LoginPage() {
           </div>
           <CardTitle className="text-2xl font-bold">QNE Sales Invoices</CardTitle>
           <CardDescription>
-            Enter your JWT token to access your sales invoices
+            Sign in to access your sales invoices
           </CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="token">JWT Token</Label>
+              <Label htmlFor="username">Username</Label>
               <Input
-                id="token"
-                type="password"
-                placeholder="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-                value={token}
-                onChange={(e) => setToken(e.target.value)}
-                className="font-mono text-sm"
-                autoComplete="off"
+                id="username"
+                type="text"
+                placeholder="Enter your username"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                autoComplete="username"
+                autoFocus
               />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password">Password</Label>
+              <div className="relative">
+                <Input
+                  id="password"
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Enter your password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  autoComplete="current-password"
+                  className="pr-10"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
+                  onClick={() => setShowPassword(!showPassword)}
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4 text-muted-foreground" />
+                  ) : (
+                    <Eye className="h-4 w-4 text-muted-foreground" />
+                  )}
+                </Button>
+              </div>
             </div>
 
             {error && (
@@ -104,7 +138,7 @@ export default function LoginPage() {
               {isSubmitting ? (
                 <span className="flex items-center gap-2">
                   <span className="h-4 w-4 animate-spin rounded-full border-2 border-current border-t-transparent" />
-                  Authenticating...
+                  Signing in...
                 </span>
               ) : (
                 <span className="flex items-center gap-2">
